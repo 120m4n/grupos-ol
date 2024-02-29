@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+    <head>
+        <meta http-equiv="expires" content="0">
+        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+        <style>
+            iframe {
+                width: 100%;
+                height: 70vh;
+
+            }
+            body {
+                background-color: beige;
+                margin: 0;
+                padding: 0;
+                width: 100vw; /* viewport width */
+                height: 100vh; /* viewport height */
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <h1>PARENT WINDOW</h1>
+        <h2>1st action - automatic data send to child when it's loaded - Status: 
+            <strong id="status-1">...WAITING...</strong>
+        </h2>
+
+        <label for="opacity-slider">layer1:</label>
+        <input name="layer1" type="range" id="opacity-slider" min="0" max="1" step="0.01">
+        
+        <label for="prefix-opacity-slider-1">layer2:</label>
+        <input name="layer2" type="range" id="prefix-opacity-slider-1" min="0" max="1" step="0.01">
+
+        <label for="prefix-opacity-slider-2">layer3:</label>
+        <input name="layer3" type="range" id="prefix-opacity-slider-2" min="0" max="1" step="0.01">
+            
+
+        <label for="prefix-opacity-slider-3">layer4:</label>
+        <input name="layer4" type="range" id="prefix-opacity-slider-3" min="0" max="1" step="0.01">
+            
+
+        <iframe title="Description of the frame" id="mainframe" src="http://localhost:5173"></iframe>
+
+        <script>
+
+            /* DEFINITIONS */
+            var frame = document.getElementById("mainframe");
+            frame = frame ? frame.contentWindow : null;
+
+            class Message {
+                constructor(type, body) {
+                    this.type = type;
+                    this.body = body;
+                }
+            }
+
+            function sendMessage(windowObj, payload) {
+                if (windowObj) {
+                    windowObj.postMessage(payload, "*");
+                }
+            }
+
+            /*
+            * RECEIVE MESSAGE FROM CHILD
+            */
+            window.addEventListener("message", (e) => {
+                var data = e.data;
+                console.log("RECEIVED message from CHILD TO PARENT", data);
+
+                var type = data.type;
+                var body = data.body;
+
+                if (type === "shakehand" && body) {
+                    // console.log("SHAKEHAND RECEIVED FROM CHILD, SENDING dummyDataToSend TO CHILD...")
+                    document.getElementById("status-1").innerText = "DONE";
+                }
+
+                if (type === 'updateSliderValue' && body && typeof body === 'object') {
+                    // Select the input slider using the name property
+                    let slider = document.querySelector(`input[name="${body.name}"]`);
+
+                    // Check if the slider exists
+                    if (slider) {
+                        // Set the value of the slider to the opacity property
+                        slider.value = body.opacity;
+                    }
+                }
+            });
+
+            /*
+            * SEND MESSAGE TO CHILD
+            */
+
+            // Select all input sliders
+            const sliders = document.querySelectorAll('input[type="range"]');
+
+            // Add event listener to each slider
+            sliders.forEach(slider => {
+                slider.addEventListener('change', () => {
+                    const newOpacity = slider.value;
+                    frame.postMessage({
+                        type: 'changeOpacity',
+                        opacity: newOpacity,
+                        name: slider.name
+                    }, '*');
+                });
+            });
+
+
+        </script>
+    </body>
+
+</html>
